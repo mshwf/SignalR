@@ -2,21 +2,32 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 internal class Program
 {
+    private static HubConnection connection;
+
     private static async Task Main(string[] args)
     {
-        var connection = new HubConnectionBuilder()
-                    .WithUrl("https://localhost:7096/chatHub")
-                    .Build();
+        Console.Title = "Client 1";
+        connection = new HubConnectionBuilder()
+            .WithUrl("https://localhost:7096/chatHub")
+            .Build();
 
 
-        connection.On("ReceiveMessage", (string message) => Console.WriteLine(message));
+        connection.On("ReceiveMessage", async (string message, string from) =>
+        {
+            Console.WriteLine($"\n{from}: {message}");
+        });
 
         await connection.StartAsync();
-        Console.WriteLine("Write your message:");
         do
         {
-            var message = Console.ReadLine();
-            await connection.InvokeAsync("SendMessage", message);
+            await Prompt();
         } while (true);
+    }
+
+    private static async Task Prompt()
+    {
+        Console.Write("Me: ");
+        var message = Console.ReadLine();
+        await connection.InvokeAsync("SendMessage", message, "Client1");
     }
 }
